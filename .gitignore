@@ -1,0 +1,29 @@
+# 素材与缓存（体积大，不入库）
+work/
+**/work/
+scripts/work/
+*.wav
+*.m4a
+*.mp4
+*.flv
+*.json.tmp
+
+# 转写分片缓存
+chunks/
+*.small.json
+*.base.json
+*.tiny.json
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# 系统
+.DS_Store
+Thumbs.db
+
+# 本地配置（可能含 Cookie）
+.sessdata
+*.local.json

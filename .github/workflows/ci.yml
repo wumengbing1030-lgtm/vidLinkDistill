@@ -1,0 +1,82 @@
+name: CI
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Python syntax check
+        run: |
+          python -m compileall -q scripts/
+
+      - name: Node syntax check
+        run: |
+          for f in scripts/*.js; do node --check "$f"; done
+
+      - name: YAML frontmatter check
+        run: |
+          python - <<'PY'
+          import pathlib, re, sys
+          p = pathlib.Path("SKILL.md")
+          t = p.read_text(encoding="utf-8")
+          m = re.match(r"^---\n(.*?)\n---\n", t, re.S)
+          if not m:
+              sys.exit("SKILL.md 缺少合法的 YAML frontmatter")
+          fm = m.group(1)
+          required = ["name","display_name","display_name_en","description",
+                      "description_zh","description_en","version","author"]
+          missing = [k for k in required if not re.search(rf"^{k}:", fm, re.M)]
+          if missing:
+              sys.exit("frontmatter 缺少必填字段: " + ", ".join(missing))
+          if not re.search(r'^version:\s*"?\d+\.\d+\.\d+"?', fm, re.M):
+              sys.exit("version 必须是 x.y.z")
+          for key in ("examples_zh","examples_en"):
+              block = re.search(rf"^{key}:\n((?:\s+-\s+.*\n)+)", fm, re.M)
+              if block:
+                  n = len([l for l in block.group(1).splitlines() if l.strip().startswith("- ")])
+                  if n > 3:
+                      sys.exit(f"{key} 有 {n} 条，超过 3 条上限")
+          print("frontmatter OK")
+          PY
+
+      - name: Package structure check
+        run: |
+          set -e
+          python - <<'PY'
+          import pathlib, zipfile, io, sys
+          root = pathlib.Path(".")
+          name = "vidLinkDistill"
+          buf = io.BytesIO()
+          with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as z:
+              for p in sorted(root.rglob("*")):
+                  if p.is_dir() or ".git" in p.parts or p.parts[0] in {".github"}:
+                      continue
+                  if "__pycache__" in p.parts or p.suffix == ".pyc":
+                      continue
+                  z.write(p, str(p.relative_to(root)))
+          data = buf.getvalue()
+          print(f"package size: {len(data)/1024:.1f} KB")
+          if len(data) > 3*1024*1024:
+              sys.exit("打包超过 3MB 上限")
+          with zipfile.ZipFile(io.BytesIO(data)) as z:
+              names = z.namelist()
+              if "SKILL.md" not in names:
+                  sys.exit("SKILL.md 不在压缩包根目录")
+              if any(n.endswith(".pyc") or "__pycache__" in n for n in names):
+                  sys.exit("包内含缓存文件")
+          print("package structure OK")
+          PY

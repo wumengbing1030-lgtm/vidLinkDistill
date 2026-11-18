@@ -1,0 +1,51 @@
+name: 功能建议
+description: 新来源、新能力、更好用的输出
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: 你遇到的具体问题
+      description: 不要写"希望支持 XX 平台"，写"我贴了 XX 链接，结果得到的是……，我期望……"
+      placeholder: 我贴了一个 XX 站的链接，结果报「解析失败：需要 login」，我希望它至少能像 YouTube 那样下低清画面 + 音频。
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: 你设想的做法
+      description: 哪怕只是想法也欢迎写出来
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: 你试过的替代方案
+      description: 有 workaround 的话先写出来，能省很多重复劳动
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: 涉及哪一块
+      options:
+        - 新来源支持（B站 / YouTube / 站点解析）
+        - 采集与转写质量
+        - 关键帧 OCR / 画面文字
+        - 笔记结构与版式
+        - 批量 / 合集模式
+        - 质量闸门规则
+        - 性能与资源占用
+        - 打包与安装
+        - 其他
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: contribute
+    attributes:
+      label: 参与意愿
+      options:
+        - label: 我愿意提 PR 实现这个功能
+        - label: 我愿意提供测试用的链接或素材（请私聊给，不要公开粘贴）
